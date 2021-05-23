@@ -2,14 +2,13 @@
 import torch
 import torch.nn as nn
 import numpy as np
-import time
 
 
 class Config(object):
 
     """配置参数"""
     def __init__(self, dataset, embedding):
-        self.model_name = 'TextRNN-' + time.strftime("%Y-%m-%d", time.localtime())
+        self.model_name = 'TextRNN'
         self.train_path = dataset + '/data/train.txt'                                # 训练集
         self.dev_path = dataset + '/data/dev.txt'                                    # 验证集
         self.test_path = dataset + '/data/test.txt'                                  # 测试集
@@ -54,10 +53,21 @@ class Model(nn.Module):
         self.fc = nn.Linear(config.hidden_size * 2, config.num_classes)
 
     def forward(self, x):
+        # x shape=[batch_size, pad_size]=[128, 32]
         x, _ = x
-        out = self.embedding(x)  # [batch_size, seq_len, embeding]=[128, 32, 300]
+
+        # out shape=[batch_size, pad_size, embed]=[128, 32, 300]
+        out = self.embedding(x)
+
+        # out shape=[batch_size, pad_size, hidden_size*num_layers]=[128, 32, 128*2]
         out, _ = self.lstm(out)
-        out = self.fc(out[:, -1, :])  # 句子最后时刻的 hidden state
+
+        # 句子最后时刻的 hidden state
+        # out shape=[batch_size, hidden_size*num_layers]=[128, 128*2]
+        out = out[:, -1, :]
+
+        # out shape=[batch_size, num_classes]=[128, 10]
+        out = self.fc(out)
         return out
 
     '''变长RNN，效果差不多，甚至还低了点...'''
