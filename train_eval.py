@@ -42,6 +42,7 @@ def train(config, model, train_iter, dev_iter, test_iter):
         print('Epoch [{}/{}]'.format(epoch + 1, config.num_epochs))
         # scheduler.step() # 学习率衰减
         for i, (trains, labels) in enumerate(train_iter):
+            trains, _ = trains
             outputs = model(trains)
             model.zero_grad()
             loss = F.cross_entropy(outputs, labels)
@@ -117,3 +118,23 @@ def evaluate(config, model, data_iter, test=False):
         confusion = metrics.confusion_matrix(labels_all, predict_all)
         return acc, loss_total / len(data_iter), report, confusion
     return acc, loss_total / len(data_iter)
+
+
+def predict_sentence(config, model, sentence, vocab):
+    model.eval()
+    tokenizer = lambda x: [y for y in x]
+    sentence = sentence.strip()
+    words = tokenizer(sentence)
+    if len(words) < config.pad_size:
+        words.extend(['<PAD>']*(config.pad_size-len(words)))
+    else:
+        words = words[:config.pad_size]
+    token = []
+    for word in words:
+        token.append(vocab.get(word, vocab.get('<UNK>')))
+    token = torch.LongTensor(token).to(config.device)
+    token = token.unsqueeze(0)
+    out = model(token)
+    out = out.detach().numpy()[0]
+    out = np.argmax(out)
+    print(config.class_list[out])

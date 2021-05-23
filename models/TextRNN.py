@@ -43,7 +43,7 @@ class Model(nn.Module):
     def __init__(self, config):
         super(Model, self).__init__()
         if config.embedding_pretrained is not None:
-
+            print('load embedding')
             self.embedding = nn.Embedding.from_pretrained(config.embedding_pretrained, freeze=False)
         else:
             self.embedding = nn.Embedding(config.n_vocab, config.embed, padding_idx=config.n_vocab - 1)
@@ -54,7 +54,7 @@ class Model(nn.Module):
 
     def forward(self, x):
         # x shape=[batch_size, pad_size]=[128, 32]
-        x, _ = x
+        # x, _ = x
 
         # out shape=[batch_size, pad_size, embed]=[128, 32, 300]
         out = self.embedding(x)
